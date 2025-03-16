@@ -96,7 +96,15 @@ class  ChatFacade:
         """
         метод обеспечивает нициализацию с API-ключом. Создаются экземпляры `TextRequest` и `ImageRequest`
         """
-        pass
+        mode:str = input('Укажите тип запроса: 1 – текстовый, 2 – с изображением: ')
+        if mode == '1':
+            self.mode = '1'
+            return TextRequest(api_key=self.api_key)
+        elif mode == '2':
+            self.mode = '2'
+            return ImageRequest(api_key=self.api_key)
+        else:
+            raise ValueError("Неверныый режим запроса")
         
     def __set_model(self) -> str: 
         """
@@ -114,7 +122,16 @@ class  ChatFacade:
         """
         метод для отправки запроса
         """
-        pass
+        user_message = {'role': 'user', 'content': text}
+        current_history = [msg for _, msg in self.history]
+
+        if image_path:
+            response:dict[Any, Any] = self.request.send(text=text, image_path=image_path, history=current_history, model=self.model)
+        else: 
+            response:dict[Any, Any] = self.request.send(text=text, history=current_history, model=self.model)
+        self.history.append((text, user_message))
+        self.history.append((text, response))
+        return response
     
     def __call__(self):
         """
@@ -123,4 +140,14 @@ class  ChatFacade:
         ключ API размещен в файле api.py в этой же директории
         """
         # text:str = input('\n Введите текст запроса')
-        pass
+        text:str = 'расскажи шутку'
+        image_path = None
+        if isinstance (self.request, ImageRequest):
+            # image_path:str = input('ВВедите путь к изображению') 
+            text = 'опиши картинку'
+            image_path:str = 'lemon.jpg'
+        response:dict[Any, Any] = self.ask_question(text=text, image_path=image_path if image_path else None)
+        print(response)
+
+chat_facade = ChatFacade(api_key=API_KEY)
+chat_facade()
